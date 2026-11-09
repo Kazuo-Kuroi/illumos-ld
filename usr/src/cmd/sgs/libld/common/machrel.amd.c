@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  * Copyright (c) 2004, 2010, Oracle and/or its affiliates. All rights reserved.
  */
 
@@ -741,6 +745,16 @@ tls_fixups(Ofl_desc *ofl, Rel_desc *arsp)
 		    R_AMD64_NONE, arsp, ld_reloc_sym_name));
 		offset -= 3;
 		(void) memcpy(offset, tlsinstr_ld_le, sizeof (tlsinstr_ld_le));
+		return (FIX_DONE);
+
+	case R_AMD64_PLT32:
+		/*
+		 * Belka: the call to a locally defined __tls_get_addr() in a
+		 * static executable; the fixup was done via the TLS_GD or
+		 * TLS_LD relocation.
+		 */
+		DBG_CALL(Dbg_reloc_transition(ofl->ofl_lml, M_MACH,
+		    R_AMD64_NONE, arsp, ld_reloc_sym_name));
 		return (FIX_DONE);
 
 	case R_AMD64_DTPOFF32:

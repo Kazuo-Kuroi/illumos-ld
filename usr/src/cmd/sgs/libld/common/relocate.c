@@ -1663,6 +1663,18 @@ ld_process_sym_reloc(Ofl_desc *ofl, Rel_desc *reld, Rel *reloc, Is_desc *isp,
 	if (IS_GOT_RELATIVE(rtype))
 		return (ld_reloc_GOT_relative(local, reld, ofl));
 
+	/*
+	 * Belka: in a static executable __tls_get_addr() is defined
+	 * locally, so the call to it in an AMD64 TLS code sequence does not
+	 * reach ld_reloc_plt(). The sequence's own relocation rewrites the
+	 * call; mark this one as part of that fixup so that it is not also
+	 * applied over the new instructions.
+	 */
+	if (local && (flags & FLG_OF_EXEC) && IS_PLT(rtype) &&
+	    (ld_targ.t_m.m_mach == EM_AMD64) &&
+	    (strcmp(sdp->sd_name, MSG_ORIG(MSG_SYM_TLSGETADDR_U)) == 0))
+		return (ld_add_actrel(FLG_REL_TLSFIX, reld, ofl));
+
 	if (local)
 		return ((*ld_targ.t_mr.mr_reloc_local)(reld, ofl));
 
