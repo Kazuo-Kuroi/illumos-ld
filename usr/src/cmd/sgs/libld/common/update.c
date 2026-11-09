@@ -4410,6 +4410,16 @@ ld_update_outfile(Ofl_desc *ofl)
 			return (S_ERROR);
 		}
 
+		/*
+		 * Belka: an executable's loadable segments are given a
+		 * physical address equal to their virtual one unless a
+		 * mapfile says otherwise, as other ELF linkers do; boot
+		 * loaders such as Limine load a kernel by it.
+		 */
+		if ((phdr->p_type == PT_LOAD) && (flags & FLG_OF_EXEC) &&
+		    ((sgp->sg_flags & FLG_SG_P_PADDR) == 0))
+			phdr->p_paddr = phdr->p_vaddr;
+
 		if (phdr->p_type == PT_NOTE) {
 			phdr->p_vaddr = 0;
 			phdr->p_paddr = 0;
