@@ -4282,7 +4282,12 @@ ld_update_outfile(Ofl_desc *ofl)
 					    sgp->sg_name,
 					    EC_ADDR(phdr->p_vaddr));
 				vaddr = phdr->p_vaddr;
-				phdr->p_align = 0;
+				/*
+				 * Belka: keep an alignment the mapfile gave
+				 * too; boot loaders reject a zero one.
+				 */
+				if ((sgp->sg_flags & FLG_SG_P_ALIGN) == 0)
+					phdr->p_align = 0;
 			} else {
 				vaddr = phdr->p_vaddr =
 				    (Addr)S_ROUND(vaddr, phdr->p_align);
