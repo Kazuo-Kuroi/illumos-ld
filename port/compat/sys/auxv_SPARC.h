@@ -1,0 +1,1 @@
+../../../usr/src/uts/common/sys/auxv_SPARC.h

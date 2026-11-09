@@ -1,0 +1,1 @@
+../../../usr/src/uts/common/sys/elf_386.h
