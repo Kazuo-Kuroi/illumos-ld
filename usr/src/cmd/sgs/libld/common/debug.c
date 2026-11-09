@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  * Copyright (c) 1992, 2010, Oracle and/or its affiliates. All rights reserved.
  */
 
@@ -58,9 +62,10 @@ static struct {
 	FILE	*fptr;	/* File to send debug output */
 	int	close_needed;	/* True if explicitly opened stream */
 } dbg_ofile = {
-	stderr,
+	NULL,	/* stderr, which need not be a constant */
 	0
 };
+#define	DBG_FPTR	(dbg_ofile.fptr != NULL ? dbg_ofile.fptr : stderr)
 
 
 /*
@@ -204,9 +209,9 @@ dbg_print(Lm_list *lml, const char *format, ...)
 			}
 		}
 		(void) fputs(prestr ? prestr : MSG_INTL(MSG_DBG_AOUT_FMT),
-		    dbg_ofile.fptr);
+		    DBG_FPTR);
 	} else
-		(void) fputs(MSG_INTL(MSG_DBG_DFLT_FMT), dbg_ofile.fptr);
+		(void) fputs(MSG_INTL(MSG_DBG_DFLT_FMT), DBG_FPTR);
 
 	if (DBG_ISTIME()) {
 		Conv_time_buf_t	buf;
@@ -225,7 +230,7 @@ dbg_print(Lm_list *lml, const char *format, ...)
 	}
 
 	va_start(args, format);
-	(void) vfprintf(dbg_ofile.fptr, format, args);
-	(void) fprintf(dbg_ofile.fptr, MSG_ORIG(MSG_STR_NL));
+	(void) vfprintf(DBG_FPTR, format, args);
+	(void) fprintf(DBG_FPTR, MSG_ORIG(MSG_STR_NL));
 	va_end(args);
 }
