@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  *	Copyright (c) 1988 AT&T
  *	  All Rights Reserved
  *
@@ -4233,8 +4237,13 @@ ld_update_outfile(Ofl_desc *ofl)
 		 * may be inspected by the interpreter.  Adjust the segments
 		 * size and offset accordingly.
 		 */
+		/*
+		 * Belka: so do static executables, so that the kernel can
+		 * pass the program headers' address (AT_PHDR) to the program.
+		 */
 		if ((_phdr == NULL) && (phdr->p_type == PT_LOAD) &&
-		    ((ofl->ofl_osinterp) || (flags & FLG_OF_DYNAMIC)) &&
+		    ((ofl->ofl_osinterp) || (flags & FLG_OF_DYNAMIC) ||
+		    (flags & FLG_OF_EXEC)) &&
 		    (!(ofl->ofl_dtflags_1 & DF_1_NOHDR))) {
 			size = (Addr)S_ROUND((phdrsz + ehdrsz),
 			    hshdr->sh_addralign);
@@ -4314,7 +4323,8 @@ ld_update_outfile(Ofl_desc *ofl)
 				 * segment.
 				 */
 				if ((ofl->ofl_osinterp) ||
-				    (flags & FLG_OF_DYNAMIC))
+				    (flags & FLG_OF_DYNAMIC) ||
+				    (flags & FLG_OF_EXEC))
 					vaddr += size;
 			} else {
 				/*
