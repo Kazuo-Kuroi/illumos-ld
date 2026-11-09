@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  *	Copyright (c) 1988 AT&T
  *	  All Rights Reserved
  *
@@ -110,15 +114,79 @@ ld_os_first_isdesc(Os_desc *osp)
  *
  *	On success, returns True (1). On failure, False (0).
  */
+/*
+ * Belka: the priority of an input section of an initialization or
+ * finalization array, from the number after ".init_array." or
+ * ".fini_array." in its name (GCC writes five digits, Clang as few as
+ * needed). One without a priority comes after all those with one, as
+ * the GNU link-editor orders them (SORT_BY_INIT_PRIORITY): C libraries
+ * rely on running their own constructors first.
+ */
+#define	ARRAY_NOPRIORITY	100000
+
+static ulong_t
+array_priority(Is_desc *isp)
+{
+	static const char *const prefix[] = {
+		".init_array.", ".fini_array.", ".preinit_array.", NULL
+	};
+	const char *name = isp->is_name, *p;
+	ulong_t pri = 0;
+	int i;
+
+	for (i = 0; prefix[i] != NULL; i++) {
+		size_t len = strlen(prefix[i]);
+
+		if (strncmp(name, prefix[i], len) != 0)
+			continue;
+		p = name + len;
+		if (*p == '\0')
+			return (ARRAY_NOPRIORITY);
+		for (; *p != '\0'; p++) {
+			if (*p < '0' || *p > '9' || pri >= ARRAY_NOPRIORITY)
+				return (ARRAY_NOPRIORITY);
+			pri = pri * 10 + (ulong_t)(*p - '0');
+		}
+		return (pri);
+	}
+	return (ARRAY_NOPRIORITY);
+}
+
 static int
 os_attach_isp(Ofl_desc *ofl, Os_desc *osp, Is_desc *isp, int mapfile_sort)
 {
 	Aliste	init_arritems;
 	int	os_isdescs_idx, do_append = 1;
+	Word	shtype = isp->is_shdr->sh_type;
 
 	if ((isp->is_flags & FLG_IS_ORDERED) == 0) {
 		init_arritems = AL_CNT_OS_ISDESCS;
 		os_isdescs_idx = OS_ISD_DEFAULT;
+
+		/*
+		 * Belka: keep an initialization or finalization array's
+		 * input sections in ascending order of priority, and in
+		 * input order within one.
+		 */
+		if (((shtype == SHT_INIT_ARRAY) || (shtype == SHT_FINI_ARRAY) ||
+		    (shtype == SHT_PREINIT_ARRAY)) &&
+		    !(mapfile_sort && (isp->is_ordndx > 0))) {
+			ulong_t	pri = array_priority(isp);
+			Aliste	idx2;
+			Is_desc	*isp2;
+
+			for (APLIST_TRAVERSE(osp->os_isdescs[OS_ISD_DEFAULT],
+			    idx2, isp2)) {
+				if (array_priority(isp2) <= pri)
+					continue;
+				if (aplist_insert(
+				    &osp->os_isdescs[OS_ISD_DEFAULT],
+				    isp, init_arritems, idx2) == NULL)
+					return (0);
+				do_append = 0;
+				break;
+			}
+		}
 
 		/*
 		 * If section ordering was specified for an unordered section

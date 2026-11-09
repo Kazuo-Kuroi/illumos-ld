@@ -32,10 +32,12 @@ the link-editor needs. The Belka changes since are:
 5. `libld: keep a segment's mapfile alignment when it has a fixed
    address`
 6. `libld: give executables' segments physical addresses`
+7. `libld: order initialization arrays by priority`
 
 illumos has no static executables; Belka's are all static for now, which
 changes 2 to 4 make possible. Changes 5 and 6 let a boot loader (Limine)
-load a kernel linked with a mapfile.
+load a kernel linked with a mapfile. Change 7 runs constructors in the
+order GCC and Clang users expect, which C libraries rely on.
 
 To move to a later illumos-gate, import the same paths again in one
 commit and reapply the changes above.
