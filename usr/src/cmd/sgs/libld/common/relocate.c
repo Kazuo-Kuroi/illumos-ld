@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  *	Copyright (c) 1988 AT&T
  *	  All Rights Reserved
  *
@@ -1405,14 +1409,11 @@ reloc_TLS(Boolean local, Rel_desc *rsp, Ofl_desc *ofl)
 	Conv_inv_buf_t	inv_buf1, inv_buf2;
 
 	/*
-	 * All TLS relocations are illegal in a static executable.
+	 * Belka: static executables may use TLS. Every TLS symbol is then
+	 * defined in the executable, so the code below relaxes each access
+	 * model to local-exec, as for a dynamic executable's own TLS; the
+	 * C library sets up the block from the PT_TLS segment.
 	 */
-	if (OFL_IS_STATIC_EXEC(ofl)) {
-		ld_eprintf(ofl, ERR_FATAL, MSG_INTL(MSG_REL_TLSSTAT),
-		    conv_reloc_type(mach, rtype, 0, &inv_buf1), ifl->ifl_name,
-		    ld_reloc_sym_name(rsp));
-		return (S_ERROR);
-	}
 
 	/*
 	 * Any TLS relocation must be against a STT_TLS symbol, all others
