@@ -33,11 +33,15 @@ the link-editor needs. The Belka changes since are:
    address`
 6. `libld: give executables' segments physical addresses`
 7. `libld: order initialization arrays by priority`
+8. `libld: round local-exec TLS offsets to the segment's alignment`
 
 illumos has no static executables; Belka's are all static for now, which
 changes 2 to 4 make possible. Changes 5 and 6 let a boot loader (Limine)
 load a kernel linked with a mapfile. Change 7 runs constructors in the
-order GCC and Clang users expect, which C libraries rely on.
+order GCC and Clang users expect, which C libraries rely on. Change 8
+follows the AMD64 psABI for an executable's TLS offsets, as GNU ld and
+mlibc's runtime linker, which Belka uses, do; Solaris's runtime linker
+expects a 16-byte rounding.
 
 To move to a later illumos-gate, import the same paths again in one
 commit and reapply the changes above.

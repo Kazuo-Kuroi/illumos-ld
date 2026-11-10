@@ -1049,9 +1049,14 @@ ld_do_activerelocs(Ofl_desc *ofl)
 			/*
 			 * This is the LE TLS reference model.  Static
 			 * offset is hard-coded.
+			 *
+			 * Belka: the executable's TLS block ends at the
+			 * thread pointer, rounded to the segment's own
+			 * alignment as the AMD64 psABI has it (and GNU ld and
+			 * mlibc's runtime linker), not to M_TLSSTATALIGN.
 			 */
 			tlsstatsize = S_ROUND(ofl->ofl_tlsphdr->p_memsz,
-			    M_TLSSTATALIGN);
+			    ofl->ofl_tlsphdr->p_align);
 			value = tlsstatsize - value;
 
 			/*
