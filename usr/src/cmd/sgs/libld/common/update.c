@@ -4046,7 +4046,7 @@ ld_update_outfile(Ofl_desc *ofl)
 		 * the address information for the .eh_frame output section
 		 * will have been figured out by now.
 		 */
-		if (phdr->p_type == PT_SUNW_UNWIND) {
+		if (phdr->p_type == PT_SUNW_EH_FRAME) {
 			Shdr	    *shdr;
 
 			if (ofl->ofl_unwindhdr == NULL)

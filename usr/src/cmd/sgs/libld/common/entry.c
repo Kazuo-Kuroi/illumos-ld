@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  *	Copyright (c) 1988 AT&T
  *	  All Rights Reserved
  *
@@ -157,8 +161,12 @@ static predef_seg_t sg_desc = {
 	SG_DESC_INIT(SGID_TLS, PT_TLS, PF_R, NULL,
 	    (FLG_SG_P_TYPE | FLG_SG_P_FLAGS)),
 
-	/* psg_unwind */
-	SG_DESC_INIT(SGID_UNWIND, PT_SUNW_UNWIND, PF_R, NULL,
+	/*
+	 * psg_unwind: Belka uses PT_SUNW_EH_FRAME, the value the amd64 psABI
+	 * requires (PT_GNU_EH_FRAME), which runtime linkers and unwinders
+	 * other than illumos's look for, rather than PT_SUNW_UNWIND.
+	 */
+	SG_DESC_INIT(SGID_UNWIND, PT_SUNW_EH_FRAME, PF_R, NULL,
 	    (FLG_SG_P_TYPE | FLG_SG_P_FLAGS)),
 
 	/* psg_sunwstack */

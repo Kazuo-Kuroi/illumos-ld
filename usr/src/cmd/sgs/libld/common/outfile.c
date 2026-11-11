@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  *	Copyright (c) 1988 AT&T
  *	  All Rights Reserved
  *
@@ -469,7 +473,7 @@ ld_create_outfile(Ofl_desc *ofl)
 			} else if (ptype == PT_TLS) {
 				if (flags & FLG_OF_TLSPHDR)
 					nseg++;
-			} else if (ptype == PT_SUNW_UNWIND) {
+			} else if (ptype == PT_SUNW_EH_FRAME) {
 				if (ofl->ofl_unwindhdr)
 					nseg++;
 			} else if (ptype == PT_SUNWDTRACE) {

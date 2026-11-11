@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  * Copyright (c) 2005, 2010, Oracle and/or its affiliates. All rights reserved.
  * Copyright 2014 Nexenta Systems, Inc.
  */
@@ -804,7 +808,7 @@ done:
 	 * that we didn't use all the space reserved for this section.
 	 * For details, see the note at head of ld_unwind_make_hdr() above.
 	 *
-	 * Find the PT_SUNW_UNWIND program header, and change the size values
+	 * Find the PT_SUNW_EH_FRAME program header, and change the size values
 	 * to the size of the subset of the section that was actually used.
 	 */
 	if (ofl->ofl_flags1 & FLG_OF1_RLXREL) {
@@ -812,7 +816,7 @@ done:
 		Phdr	*phdr = ofl->ofl_phdr;
 
 		for (; phnum-- > 0; phdr++) {
-			if (phdr->p_type == PT_SUNW_UNWIND) {
+			if (phdr->p_type == PT_SUNW_EH_FRAME) {
 				phdr->p_memsz = 12 + (8 * fde_count);
 				phdr->p_filesz = phdr->p_memsz;
 				break;
