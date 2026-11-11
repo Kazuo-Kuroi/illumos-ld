@@ -944,7 +944,7 @@ ld_reloc_plt(Rel_desc *rsp, Ofl_desc *ofl)
 		 * AMD64 TLS code sequences do not use a unique TLS
 		 * relocation to reference the __tls_get_addr() function call.
 		 */
-		if ((ofl->ofl_flags & FLG_OF_EXEC) &&
+		if (OFL_IS_EXECUTABLE(ofl) &&
 		    (strcmp(sdp->sd_name, MSG_ORIG(MSG_SYM_TLSGETADDR_U)) ==
 		    0))
 			return (ld_add_actrel(FLG_REL_TLSFIX, rsp, ofl));
@@ -1433,7 +1433,7 @@ reloc_TLS(Boolean local, Rel_desc *rsp, Ofl_desc *ofl)
 	 * reference model to reference an external symbol.
 	 */
 	if (!local && (IS_TLS_LD(rtype) ||
-	    ((flags & FLG_OF_EXEC) && IS_TLS_LE(rtype)))) {
+	    (OFL_IS_EXECUTABLE(ofl) && IS_TLS_LE(rtype)))) {
 		ld_eprintf(ofl, ERR_FATAL, MSG_INTL(MSG_REL_TLSBND),
 		    conv_reloc_type(mach, rtype, 0, &inv_buf1), ifl->ifl_name,
 		    ld_reloc_sym_name(rsp), sdp->sd_file->ifl_name);
@@ -1452,8 +1452,11 @@ reloc_TLS(Boolean local, Rel_desc *rsp, Ofl_desc *ofl)
 	 * used.  This area is intended for specialized applications, and does
 	 * not provide the degree of flexibility dynamic TLS can offer.  Under
 	 * -z verbose indicate this restriction to the user.
+	 *
+	 * A position-independent executable, the main program, has the first
+	 * static TLS block, as a dynamic executable does (Belka).
 	 */
-	if ((flags & FLG_OF_EXEC) == 0) {
+	if (!OFL_IS_EXECUTABLE(ofl)) {
 		if (IS_TLS_LE(rtype)) {
 			ld_eprintf(ofl, ERR_FATAL, MSG_INTL(MSG_REL_TLSLE),
 			    conv_reloc_type(mach, rtype, 0, &inv_buf1),

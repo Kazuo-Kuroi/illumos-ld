@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  *	Copyright (c) 1988 AT&T
  *	  All Rights Reserved
  *
@@ -118,6 +122,7 @@ enum output_type {
 	OT_SHARED,		/* shared object */
 	OT_EXEC,		/* dynamic executable */
 	OT_KMOD,		/* kernel module */
+	OT_PIE,			/* position-independent executable */
 };
 
 static enum output_type	otype = OT_EXEC;
@@ -459,7 +464,8 @@ check_flags(Ofl_desc * ofl, int argc)
 			ofl->ofl_guideflags |= FLG_OFG_NO_TEXT;
 		}
 
-		if ((otype == OT_SHARED) || (otype == OT_EXEC)) {
+		if ((otype == OT_SHARED) || (otype == OT_EXEC) ||
+		    (otype == OT_PIE)) {
 			/*
 			 * Create a dynamic object.  -Bdirect indicates that all
 			 * references should be bound directly.  This also
@@ -559,6 +565,32 @@ check_flags(Ofl_desc * ofl, int argc)
 				ofl->ofl_flags |= FLG_OF_SYMBOLIC;
 				ofl->ofl_dtflags |= DF_SYMBOLIC;
 			}
+		} else if (otype == OT_PIE) {
+			/*
+			 * Position-independent executable (Belka): a shared
+			 * object that names an interpreter, which the kernel
+			 * loads anywhere as the process's main program. Its
+			 * own references bind to its own definitions, which
+			 * nothing can interpose on, as -Bsymbolic does; like an
+			 * executable it has no undefined symbols and the first
+			 * static TLS block (OFL_IS_EXECUTABLE), and like Oracle
+			 * Solaris's, it asserts -z text unless told otherwise.
+			 */
+			ofl->ofl_flags |= (FLG_OF_SHAROBJ | FLG_OF_SYMBOLIC);
+			ofl->ofl_flags1 |= FLG_OF1_PIE;
+			ofl->ofl_dtflags |= DF_SYMBOLIC;
+			ofl->ofl_dtflags_1 |= DF_1_PIE;
+			if (zdflag != SET_FALSE)
+				ofl->ofl_flags |= FLG_OF_NOUNDEF;
+			if (ztflag == NULL)
+				ofl->ofl_flags |= FLG_OF_PURETXT;
+			ofl->ofl_guideflags |= FLG_OFG_NO_TEXT;
+			if (ofl->ofl_soname)
+				ld_eprintf(ofl, ERR_FATAL,
+				    MSG_INTL(MSG_MARG_DY_INCOMP),
+				    MSG_INTL(MSG_MARG_SONAME));
+			if (ofl->ofl_interp == NULL)
+				ofl->ofl_interp = ld_targ.t_m.m_def_interp;
 		} else {
 			/*
 			 * Dynamic relocatable object.
@@ -597,6 +629,9 @@ check_flags(Ofl_desc * ofl, int argc)
 		if (ztflag)
 			ld_eprintf(ofl, ERR_FATAL, MSG_INTL(MSG_ARG_ST_INCOMP),
 			    MSG_ORIG(MSG_ARG_ZTEXTALL));
+		if (otype == OT_PIE)
+			ld_eprintf(ofl, ERR_FATAL, MSG_INTL(MSG_ARG_ST_INCOMP),
+			    MSG_ORIG(MSG_ARG_ZTYPEPIE));
 		if (otype == OT_SHARED)
 			ld_eprintf(ofl, ERR_FATAL, MSG_INTL(MSG_MARG_ST_INCOMP),
 			    MSG_INTL(MSG_MARG_SO));
@@ -1571,6 +1606,9 @@ parseopt_pass1(Ofl_desc *ofl, int argc, char **argv, int *usage)
 				} else if (strcmp(p,
 				    MSG_ORIG(MSG_ARG_TYPE_KMOD)) == 0) {
 					otype = OT_KMOD;
+				} else if (strcmp(p,
+				    MSG_ORIG(MSG_ARG_TYPE_PIE)) == 0) {
+					otype = OT_PIE;
 				} else {
 					ld_eprintf(ofl, ERR_FATAL,
 					    MSG_INTL(MSG_ARG_ILLEGAL),

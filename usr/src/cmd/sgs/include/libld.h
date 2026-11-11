@@ -20,6 +20,10 @@
  */
 
 /*
+ * Portions Copyright 2026 Setsuna Software L.C.
+ */
+
+/*
  *	Copyright (c) 1988 AT&T
  *	  All Rights Reserved
  *
@@ -527,6 +531,16 @@ struct ofl_desc {
 #define	FLG_OF1_OVPLATCAP 0x1000000000	/* override CA_SUNW_PLAT capability */
 #define	FLG_OF1_OVIDCAP	0x2000000000	/* override CA_SUNW_ID capability */
 #define	FLG_OF1_OVHWCAP3 0x4000000000	/* override CA_SUNW_HW_3 capabilities */
+#define	FLG_OF1_PIE	0x8000000000	/* position-independent executable */
+
+/*
+ * Is the output treated as an executable where only one is meaningful (its
+ * own static TLS, references the main program alone may make): a dynamic
+ * executable, or a position-independent one (a shared object that is the
+ * process's main program)?
+ */
+#define	OFL_IS_EXECUTABLE(ofl) \
+	(((ofl)->ofl_flags & FLG_OF_EXEC) || ((ofl)->ofl_flags1 & FLG_OF1_PIE))
 
 /*
  * Guidance flags. The flags with the FLG_OFG_NO_ prefix are used to suppress

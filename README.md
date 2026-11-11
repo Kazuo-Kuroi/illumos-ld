@@ -34,14 +34,22 @@ the link-editor needs. The Belka changes since are:
 6. `libld: give executables' segments physical addresses`
 7. `libld: order initialization arrays by priority`
 8. `libld: round local-exec TLS offsets to the segment's alignment`
+9. `libld: mark .eh_frame_hdr with PT_SUNW_EH_FRAME`
+10. `libld: add position-independent executables (-z type=pie)`
 
-illumos has no static executables; Belka's are all static for now, which
-changes 2 to 4 make possible. Changes 5 and 6 let a boot loader (Limine)
-load a kernel linked with a mapfile. Change 7 runs constructors in the
-order GCC and Clang users expect, which C libraries rely on. Change 8
-follows the AMD64 psABI for an executable's TLS offsets, as GNU ld and
-mlibc's runtime linker, which Belka uses, do; Solaris's runtime linker
-expects a 16-byte rounding.
+illumos has no static executables; Belka's static programs are what
+changes 2 to 4 make possible. Changes 5 and 6 let a boot loader
+(Limine) load a kernel linked with a mapfile. Change 7 runs
+constructors in the order GCC and Clang users expect, which C libraries
+rely on. Change 8 follows the AMD64 psABI for an executable's TLS
+offsets, as GNU ld and mlibc's runtime linker, which Belka uses, do;
+Solaris's runtime linker expects a 16-byte rounding. Change 9 uses the
+program header type the AMD64 psABI requires for `.eh_frame_hdr` (also
+`PT_GNU_EH_FRAME`), which unwinders other than illumos's look for.
+Change 10 adds Oracle Solaris's `-z type=pie`, which illumos lacks: a
+shared object naming an interpreter, marked `DF_1_PIE`, bound
+symbolically, with an executable's TLS; it makes no copy relocations,
+so its code must reach other objects' data through the GOT.
 
 To move to a later illumos-gate, import the same paths again in one
 commit and reapply the changes above.

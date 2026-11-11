@@ -20,6 +20,10 @@
 #
 
 #
+# Portions Copyright 2026 Setsuna Software L.C.
+#
+
+#
 # Copyright (c) 1995, 2010, Oracle and/or its affiliates. All rights reserved.
 # Copyright (c) 2012, Joyent, Inc.  All rights reserved.
 # Copyright 2017 RackTop Systems.
@@ -1409,6 +1413,7 @@
 @ MSG_ARG_ZTEXTOFF	"-ztextoff"
 @ MSG_ARG_ZTEXTWARN	"-ztextwarn"
 @ MSG_ARG_ZTEXTALL	"-z[text|textwarn|textoff]"
+@ MSG_ARG_ZTYPEPIE	"-z type=pie"
 @ MSG_ARG_ZLOADFLTR	"-zloadfltr"
 @ MSG_ARG_ZCOMBRELOC	"-zcombreloc"
 @ MSG_ARG_ZSYMBOLCAP	"-zsymbolcap"
@@ -1539,6 +1544,7 @@
 @ MSG_ARG_TYPE_EXEC	"exec"
 @ MSG_ARG_TYPE_SHARED	"shared"
 @ MSG_ARG_TYPE_KMOD	"kmod"
+@ MSG_ARG_TYPE_PIE	"pie"
 
 # Environment variable strings
 

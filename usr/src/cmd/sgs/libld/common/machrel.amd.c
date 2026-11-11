@@ -1350,20 +1350,20 @@ ld_reloc_TLS(Boolean local, Rel_desc * rsp, Ofl_desc * ofl)
 {
 	Word		rtype = rsp->rel_rtype;
 	Sym_desc	*sdp = rsp->rel_sym;
-	ofl_flag_t	flags = ofl->ofl_flags;
 	Gotndx		*gnp;
 
 	/*
-	 * If we're building an executable - use either the IE or LE access
-	 * model.  If we're building a shared object process any IE model.
+	 * If we're building an executable (a position-independent one too:
+	 * Belka) - use either the IE or LE access model.  If we're building a
+	 * shared object process any IE model.
 	 */
-	if ((flags & FLG_OF_EXEC) || (IS_TLS_IE(rtype))) {
+	if (OFL_IS_EXECUTABLE(ofl) || (IS_TLS_IE(rtype))) {
 		/*
 		 * Set the DF_STATIC_TLS flag.
 		 */
 		ofl->ofl_dtflags |= DF_STATIC_TLS;
 
-		if (!local || ((flags & FLG_OF_EXEC) == 0)) {
+		if (!local || !OFL_IS_EXECUTABLE(ofl)) {
 			/*
 			 * Assign a GOT entry for static TLS references.
 			 */
