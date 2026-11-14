@@ -30,6 +30,7 @@
 
 /*
  * Copyright (c) 2018, Joyent, Inc.
+ * Portions Copyright 2026 Setsuna Software L.C.
  */
 
 /*
@@ -38,6 +39,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -534,7 +536,30 @@ ld_getopt(Lm_list *lml, int ndx, int argc, char **argv)
 		}
 	}
 
-	if ((c = getopt(argc, argv, MSG_ORIG(MSG_STR_OPTIONS))) != -1) {
+#ifdef __GLIBC__
+	/*
+	 * The link-editor reads its arguments in order, in two passes, and
+	 * options such as -z allextract and -B static apply to the files
+	 * after them. glibc's getopt() permutes argv to put every option
+	 * first unless the option string begins with "+", which asks for
+	 * the POSIX behaviour illumos's getopt() has.
+	 */
+	static char	*optstr = NULL;
+
+	if (optstr == NULL) {
+		const char	*opts = MSG_ORIG(MSG_STR_OPTIONS);
+		size_t		len = strlen(opts);
+
+		if ((optstr = malloc(len + 2)) == NULL)
+			return (-1);
+		optstr[0] = '+';
+		(void) memcpy(optstr + 1, opts, len + 1);
+	}
+#else
+	const char	*optstr = MSG_ORIG(MSG_STR_OPTIONS);
+#endif
+
+	if ((c = getopt(argc, argv, optstr)) != -1) {
 		/*
 		 * It is possible that a "-Wl," argument has been used to
 		 * specify an option.  This isn't advertized ld(1) syntax, but
