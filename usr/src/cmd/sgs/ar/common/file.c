@@ -18,6 +18,7 @@
  *
  * CDDL HEADER END
  */
+/* Portions Copyright 2026 Setsuna Software L.C. */
 
 /*
  * Copyright (c) 1995, 2010, Oracle and/or its affiliates. All rights reserved.
@@ -104,7 +105,7 @@ static struct {
 static void		arwrite(const char *, int, const char *, size_t);
 static size_t		mklong_tab();
 static size_t		mksymtab(const char *, ARFILEP **, int *);
-static const char	*make_tmpname(const char *);
+static const char	*make_tmpname(const char *, int *);
 static size_t		sizeof_symtbl(size_t, int, size_t);
 static void		savelongname(ARFILE *);
 static void		savename(char *);
@@ -1184,8 +1185,12 @@ writefile(Cmd_info *cmd_info)
 	 * create the replacement under a temporary name and then rename it
 	 * into place.
 	 */
-	ar_outfile.path = new_archive ? name : make_tmpname(name);
-	ar_outfile.fd = open(ar_outfile.path, O_RDWR|O_CREAT|O_LARGEFILE, 0666);
+	if (new_archive) {
+		ar_outfile.path = name;
+		ar_outfile.fd = open(name, O_RDWR|O_CREAT|O_LARGEFILE, 0666);
+	} else {
+		ar_outfile.path = make_tmpname(name, &ar_outfile.fd);
+	}
 	if (ar_outfile.fd == -1) {
 		int err = errno;
 		(void) fprintf(stderr, new_archive ?
@@ -1620,7 +1625,7 @@ arwrite(const char *name, int nfd, const char *dst, size_t size)
 }
 
 static const char *
-make_tmpname(const char *filename)
+make_tmpname(const char *filename, int *fd)
 {
 	char	*slash, *tmpname;
 	size_t	prefix_cnt = 0;
@@ -1643,7 +1648,14 @@ make_tmpname(const char *filename)
 	if (prefix_cnt > 0)
 		(void) strncpy(tmpname, filename, prefix_cnt);
 	(void) strcpy(tmpname + prefix_cnt, MSG_ORIG(MSG_STR_MKTEMP));
-	(void) mktemp(tmpname);
+	*fd = mkstemp(tmpname);
+	if (*fd == -1) {
+		int err = errno;
+		(void) fprintf(stderr, MSG_INTL(MSG_SYS_OPEN),
+		    tmpname, strerror(err));
+		free(tmpname);
+		exit(1);
+	}
 
 	return (tmpname);
 }
