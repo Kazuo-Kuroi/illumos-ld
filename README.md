@@ -1,7 +1,7 @@
 # illumos-ld
 
 The illumos link-editor (`ld` and `libld`, with `libelf`, `liblddbg`,
-`libconv`, and the `sgsmsg` message tool), taken from illumos-gate and
+`libconv`, the `sgsmsg` message tool, and `ar`/`nm`), taken from illumos-gate and
 made to build on hosts other than illumos, for
 [Belka](https://github.com/Kazuo-Kuroi/belka). Belka uses it as its
 link-editor: it links Belka's kernel and its statically linked programs.
@@ -36,6 +36,7 @@ the link-editor needs. The Belka changes since are:
 8. `libld: round local-exec TLS offsets to the segment's alignment`
 9. `libld: mark .eh_frame_hdr with PT_SUNW_EH_FRAME`
 10. `libld: add position-independent executables (-z type=pie)`
+11. `ar: create archive replacement files atomically with mkstemp`
 
 illumos has no static executables; Belka's static programs are what
 changes 2 to 4 make possible. Changes 5 and 6 let a boot loader
@@ -75,3 +76,13 @@ sparc), whatever the host.
 * The parts of libconv and libelf only other tools use (core file notes,
   `nlist`).
 * The runtime linker, `ld.so.1`.
+
+## Native Belka bootstrap
+
+The MIT port layer also supports Belka as the build host. A cross build
+can set HOSTCC to a hosted target compiler wrapper and SGSMSG_FOR_BUILD
+to the build host's sgsmsg. ld, ar, nm and the target sgsmsg are built
+from the same sources and libraries. LDLIBS is empty on Belka because
+dynamic-loading functions are part of libc. The initial binaries and
+objects are cross-built; a native compiler is still required for a full
+source bootstrap.

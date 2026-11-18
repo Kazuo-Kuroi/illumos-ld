@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <libintl.h>
 
 typedef unsigned char uchar_t;
 typedef unsigned short ushort_t;
@@ -34,6 +35,12 @@ typedef unsigned long long u_longlong_t;
 typedef enum { B_FALSE = 0, B_TRUE = 1 } boolean_t;
 typedef int32_t lwpid_t;
 typedef uint64_t hrtime_t;
+#ifdef __belka__
+typedef long Lmid_t;
+#define UID_NOBODY 32767
+#define GID_NOBODY 32767
+#define O_LARGEFILE 0
+#endif
 typedef char *caddr_t;
 
 #ifndef _LP64

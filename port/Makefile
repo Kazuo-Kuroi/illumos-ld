@@ -34,6 +34,7 @@ CPPFLAGS := -DNATIVE_BUILD -include $(PORT)/compat/solcompat.h \
 
 COMPILE  = $(HOSTCC) $(ALLCFLAGS) $(CPPFLAGS)
 SGSMSG  := $(O)/sgsmsg
+SGSMSG_FOR_BUILD ?= $(SGSMSG)
 MSGFLAGS := -i $(SGS)/messages/sgs.ident
 SGSCOMMON := $(SGS)/common
 
@@ -51,7 +52,7 @@ $(O)/gen/dlfcn.h: $(SRC)/head/dlfcn.h
 	        print "#ifndef " n; print "#define " n " " $$0; print "#endif" }' $<; \
 	} > $@
 
-GEN     := $(O)/gen/dlfcn.h
+GEN     := $(O)/gen/dlfcn.h $(wildcard $(PORT)/compat/*.h $(PORT)/compat/sys/*.h)
 
 # --- sgsmsg ---
 
@@ -91,9 +92,9 @@ CONV_OBJS := $(CONV_COM:%=$(OC)/%.o) $(CONV_ELF:%=$(OC)/%32.o) \
 CONV_HDRS := $(CONV_MSG:%=$(OC)/%_msg.h) $(GEN)
 CONVCPP := -I$(CONV) -I$(OC)
 
-$(OC)/%_msg.h $(OC)/%_msg.c: $(CONV)/%.msg $(SGSMSG)
+$(OC)/%_msg.h $(OC)/%_msg.c &: $(CONV)/%.msg $(SGSMSG_FOR_BUILD)
 	@mkdir -p $(OC)
-	cd $(OC) && $(SGSMSG) $(MSGFLAGS) -h $*_msg.h -d $*_msg.c \
+	cd $(OC) && $(SGSMSG_FOR_BUILD) $(MSGFLAGS) -h $*_msg.h -d $*_msg.c \
 	    -n sgs_msg_libconv_$* $<
 $(OC)/%_msg.o: $(OC)/%_msg.c $(CONV_HDRS)
 	$(COMPILE) $(CONVCPP) -c -o $@ $<
@@ -126,9 +127,9 @@ ELF_OBJS := $(ELF_COM:%=$(OE)/%.o) $(ELF_CLS:%=$(OE)/%64.o) $(OE)/msg.o \
         $(OE)/xlate.o $(OE)/xlate64.o
 ELFCPP  := -I$(ELFD) -I$(OE)
 
-$(OE)/msg.h $(OE)/msg.c: $(ELFD)/libelf.msg $(ELFD)/libelf.32.msg $(SGSMSG)
+$(OE)/msg.h $(OE)/msg.c &: $(ELFD)/libelf.msg $(ELFD)/libelf.32.msg $(SGSMSG_FOR_BUILD)
 	@mkdir -p $(OE)
-	cd $(OE) && $(SGSMSG) $(MSGFLAGS) -h msg.h -d msg.c -n libelf_msg \
+	cd $(OE) && $(SGSMSG_FOR_BUILD) $(MSGFLAGS) -h msg.h -d msg.c -n libelf_msg \
 	    $(ELFD)/libelf.msg $(ELFD)/libelf.32.msg
 $(OE)/xlate.c: $(ELFD)/xlate.m4
 	@mkdir -p $(OE)
@@ -162,9 +163,9 @@ DBG_OBJS := $(DBG_COM:%=$(OD)/%.o) $(DBG_CLS:%=$(OD)/%32.o) \
         $(DBG_CLS:%=$(OD)/%64.o) $(OD)/msg.o $(OD)/alist.o
 DBGCPP  := -I$(DBGD) -I$(OD)
 
-$(OD)/msg.h $(OD)/msg.c: $(DBGD)/liblddbg.msg $(SGSMSG)
+$(OD)/msg.h $(OD)/msg.c &: $(DBGD)/liblddbg.msg $(SGSMSG_FOR_BUILD)
 	@mkdir -p $(OD)
-	cd $(OD) && $(SGSMSG) $(MSGFLAGS) -h msg.h -d msg.c -n liblddbg_msg $<
+	cd $(OD) && $(SGSMSG_FOR_BUILD) $(MSGFLAGS) -h msg.h -d msg.c -n liblddbg_msg $<
 $(OD)/debug.o: $(DBGD)/debug.c $(OD)/msg.h $(GEN)
 	$(COMPILE) $(DBGCPP) -Ddbg_print=liblddbg_dbg_print -c -o $@ $<
 $(OD)/%32.o: $(DBGD)/%.c $(OD)/msg.h $(GEN)
@@ -202,10 +203,10 @@ LD_OBJS := $(LD_COM:%=$(OL)/%.o) $(LD_CLS:%=$(OL)/%32.o) \
 LDCPP   := -DUSE_LIBLD_MALLOC -I$(LDD) -I$(OL) -I$(SRC)/uts/common/krtld
 LDHDRS  := $(OL)/msg.h $(GEN)
 
-$(OL)/msg.h $(OL)/msg.c: $(LDD)/libld.msg $(LDD)/libld.sparc.msg \
-                $(LDD)/libld.intel.msg $(SGSMSG)
+$(OL)/msg.h $(OL)/msg.c &: $(LDD)/libld.msg $(LDD)/libld.sparc.msg \
+                $(LDD)/libld.intel.msg $(SGSMSG_FOR_BUILD)
 	@mkdir -p $(OL)
-	cd $(OL) && $(SGSMSG) $(MSGFLAGS) -h msg.h -d msg.c -n libld_msg \
+	cd $(OL) && $(SGSMSG_FOR_BUILD) $(MSGFLAGS) -h msg.h -d msg.c -n libld_msg \
 	    $(LDD)/libld.msg $(LDD)/libld.sparc.msg $(LDD)/libld.intel.msg
 $(OL)/doreloc_x86_32.o: $(SRC)/uts/intel/ia32/krtld/doreloc.c $(LDHDRS)
 	$(COMPILE) $(LDCPP) -DDO_RELOC_LIBLD -c -o $@ $<
@@ -238,9 +239,9 @@ $(O)/libld.a: $(LD_OBJS)
 OLD     := $(O)/ld.d
 LIBS    := $(O)/libld.a $(O)/liblddbg.a $(O)/libelf.a $(O)/libconv.a
 
-$(OLD)/msg.h $(OLD)/msg.c: $(SGS)/ld/common/ld.msg $(SGSMSG)
+$(OLD)/msg.h $(OLD)/msg.c &: $(SGS)/ld/common/ld.msg $(SGSMSG_FOR_BUILD)
 	@mkdir -p $(OLD)
-	cd $(OLD) && $(SGSMSG) $(MSGFLAGS) -h msg.h -d msg.c -n ld_msg $<
+	cd $(OLD) && $(SGSMSG_FOR_BUILD) $(MSGFLAGS) -h msg.h -d msg.c -n ld_msg $<
 $(OLD)/ld.o: $(SGS)/ld/common/ld.c $(OLD)/msg.h $(GEN)
 	$(COMPILE) -I$(OLD) -c -o $@ $<
 $(OLD)/msg.o: $(OLD)/msg.c $(GEN)
@@ -249,6 +250,29 @@ $(OLD)/msg.o: $(OLD)/msg.c $(GEN)
 # The libraries call each other, so they are searched twice.
 $(O)/ld: $(OLD)/ld.o $(OLD)/msg.o $(LIBS)
 	$(HOSTCC) -o $@ $(OLD)/ld.o $(OLD)/msg.o $(LIBS) $(LIBS) $(LDLIBS)
+
+# Archive and symbol tools share the link-editor's portability libraries.
+OAR := $(O)/ar.d
+AR_OBJS := $(OAR)/main.o $(OAR)/cmd.o $(OAR)/file.o $(OAR)/msg.o
+$(OAR)/msg.h $(OAR)/msg.c &: $(SGS)/ar/common/ar.msg $(SGSMSG_FOR_BUILD)
+	@mkdir -p $(OAR)
+	cd $(OAR) && $(SGSMSG_FOR_BUILD) $(MSGFLAGS) -h msg.h -d msg.c -n ar_msg $<
+
+$(OAR)/%.o: $(SGS)/ar/common/%.c $(SGS)/ar/common/inc.h $(OAR)/msg.h $(GEN)
+	$(COMPILE) -I$(OAR) -c -o $@ $<
+
+$(OAR)/msg.o: $(OAR)/msg.c $(GEN)
+	$(COMPILE) -I$(OAR) -c -o $@ $<
+
+$(O)/ar: $(AR_OBJS) $(LIBS)
+	$(HOSTCC) -o $@ $(AR_OBJS) $(LIBS) $(LIBS) $(LDLIBS)
+
+$(O)/nm.d/nm.o: $(SGS)/nm/common/nm.c $(GEN)
+	@mkdir -p $(dir $@)
+	$(COMPILE) -c -o $@ $<
+
+$(O)/nm: $(O)/nm.d/nm.o $(LIBS)
+	$(HOSTCC) -o $@ $< $(LIBS) $(LIBS) $(LDLIBS)
 
 clean:
 	rm -rf $(O)
